@@ -43,6 +43,117 @@ Configure `--timeout` and `--attempts` if necessary. Transient network errors an
 HTTP 408/429/500/502/503/504 receive bounded exponential backoff. Access rejections
 such as HTTP 403/418 and malformed payloads are not retried.
 
+## Use from another Python app
+
+### Install from GitHub
+
+In the consuming app's Python **3.11+** environment, with Git installed:
+
+```sh
+python -m pip install \
+  "cnn-fear-greed-daily @ git+https://github.com/VansonLeung/tqqq_vs_fear_greed_fetch.git@main#subdirectory=codes/v1"
+```
+
+The distribution name is `cnn-fear-greed-daily`; the Python import is `fear_greed`.
+The `subdirectory=codes/v1` suffix points pip to the package's `pyproject.toml`.
+No editable checkout or PyPI publication is needed. See
+[pip's Git installation documentation](https://pip.pypa.io/en/stable/topics/vcs-support/).
+
+For repeatable deployments, replace `main` with a full commit hash or a release
+tag that exists in the repository. Add the same dependency to the consuming app's
+`requirements.txt`, without shell quotes:
+
+```text
+cnn-fear-greed-daily @ git+https://github.com/VansonLeung/tqqq_vs_fear_greed_fetch.git@FULL_COMMIT_HASH#subdirectory=codes/v1
+```
+
+Replace `FULL_COMMIT_HASH` before installing with `python -m pip install -r requirements.txt`.
+
+### Fetch a report and generate PNGs
+
+This example uses the current Python API:
+
+```python
+from pathlib import Path
+
+from fear_greed import Config, prepare_report
+from fear_greed.charts.service import attach_charts
+
+state_dir = Path("./app-data/fear-greed").resolve()
+state_dir.mkdir(parents=True, exist_ok=True)
+
+config = Config(
+    database=state_dir / "state.sqlite3",
+    timeout_seconds=15,
+    attempts=3,
+)
+
+report = prepare_report(config)
+
+# Optional: omit this call if the app only needs the CNN report.
+report = attach_charts(
+    report,
+    config,
+    output_dir=state_dir / "charts",
+    mode="both",
+)
+
+observation = report["observation"]
+if observation is not None:
+    print(observation["score"], observation["category"])
+    print("Freshness:", report["freshness"])
+    print("Cached:", report["is_cached"])
+
+for artifact in report.get("artifacts", []):
+    print("PNG:", artifact["path"])
+    print("Return statistics:", artifact["forward_performance"])
+
+print("Data issues:", report["quality_issues"])
+print("Chart issues:", report.get("chart_issues", []))
+```
+
+`prepare_report()` fetches CNN data, updates persistent SQLite state, and returns
+a JSON-safe dictionary. `attach_charts()` extends that dictionary with `artifacts`
+and `chart_issues`, fetching historical CNN and TQQQ data as needed. PNGs are written
+to disk; each artifact's `path` is an absolute local path, not a public URL.
+The consuming app can serve those files or attach them to its own notifications.
+
+Chart modes are `daily` (six-month overlay), `weekly` (five-year overlay), `both`,
+and `auto` (daily, plus weekly on Saturdays in Asia/Hong_Kong). Each image includes
+the subsequent 20-session return and win-rate comparison. Artifact
+`forward_performance` contains its period, horizon, sample counts, mean returns,
+and win rates; returns and win rates are fractions. See [CHARTS.md](CHARTS.md) for
+the calculation rules and historical-data limitations.
+
+### Application responsibilities
+
+Recommended flow:
+
+```text
+App's scheduled background job
+    → prepare_report()
+    → attach_charts() when images are needed
+    → save report JSON and PNGs
+    → dashboard or notification system reads the saved results
+```
+
+| Responsibility | Guidance |
+|---|---|
+| Scheduling | Use the app's scheduler; the package runs immediately and installs no background job. |
+| Persistence | Use a stable, writable database path. For deployment, configure an absolute directory on persistent storage. |
+| Web and async apps | Fetching and rendering are blocking operations. Run them in a background worker and serve saved results. |
+| Multiple workers | Use one chart-generation worker per output directory to avoid competing writes to dated images and manifests. |
+| Source failures | Inspect `fetch_status`, `freshness`, `is_cached`, and `quality_issues`; a cached observation can still be returned. |
+| Chart failures | Inspect `chart_issues` and iterate the actual `artifacts`; a chart issue can coexist with successfully generated PNGs. |
+| Local failures | Handle configuration and SQLite/filesystem exceptions from report preparation in the consuming app. |
+| Notifications | Deduplicate using `event_id`; persist a delivery cursor and use `read_events()` for recovery, as described below. |
+
+When using the installed CLI instead of imports, call `fear-greed` from the app's
+environment. Exit code **1** can still include usable JSON and generated PNGs
+(for example, when CNN history has a gap); inspect the report before deciding
+whether the job failed. Python callers receive the report directly, without a CLI
+exit code.
+
 ## Current source verification
 
 On 2026-09-15, initial probes of the data endpoint returned **HTTP 418**. The

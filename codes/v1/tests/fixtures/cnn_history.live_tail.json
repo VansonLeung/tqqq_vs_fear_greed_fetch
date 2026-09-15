@@ -1,0 +1,54 @@
+{
+  "fixture_note": "Live CNN excerpt retrieved 2026-09-15: dated rows followed by a non-midnight point matching the live summary. Middle history omitted.",
+  "fear_and_greed": {
+    "score": 30.3428571428571,
+    "rating": "fear",
+    "timestamp": "2026-09-15T07:37:31+00:00",
+    "previous_close": 31.0571428571429,
+    "previous_1_week": 39.142857142857146,
+    "previous_1_month": 64.31428571428572,
+    "previous_1_year": 64.45714285714287
+  },
+  "fear_and_greed_historical": {
+    "timestamp": 1789457851000.0,
+    "score": 30.3428571428571,
+    "rating": "fear",
+    "data": [
+      {
+        "x": 1630454400000.0,
+        "y": 43.13333333333333,
+        "rating": "fear"
+      },
+      {
+        "x": 1630540800000.0,
+        "y": 44.166666666666664,
+        "rating": "fear"
+      },
+      {
+        "x": 1788998400000.0,
+        "y": 32.2,
+        "rating": "fear"
+      },
+      {
+        "x": 1789084800000.0,
+        "y": 32.6857142857143,
+        "rating": "fear"
+      },
+      {
+        "x": 1789344000000.0,
+        "y": 30.3428571428571,
+        "rating": "fear"
+      },
+      {
+        "x": 1789430400000.0,
+        "y": 30.3428571428571,
+        "rating": "fear"
+      },
+      {
+        "x": 1789457851000.0,
+        "y": 30.3428571428571,
+        "rating": "fear"
+      }
+    ]
+  }
+}

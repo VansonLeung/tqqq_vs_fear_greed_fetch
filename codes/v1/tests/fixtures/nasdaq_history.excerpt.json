@@ -1,0 +1,52 @@
+{
+  "fixture_note": "Actual Nasdaq rows from a live response, reduced for tests; totalRecords reflects this subset. Full response count was 1683",
+  "data": {
+    "symbol": "TQQQ",
+    "totalRecords": 5,
+    "tradesTable": {
+      "asOf": null,
+      "rows": [
+        {
+          "date": "09/14/2026",
+          "close": "69.27",
+          "volume": "49,910,320",
+          "open": "67.529",
+          "high": "70.39",
+          "low": "67.34"
+        },
+        {
+          "date": "11/20/2025",
+          "close": "46.45",
+          "volume": "178,246,300",
+          "open": "52.95",
+          "high": "53.54",
+          "low": "46.23"
+        },
+        {
+          "date": "11/19/2025",
+          "close": "50.025",
+          "volume": "184,263,520",
+          "open": "49.325",
+          "high": "51.575",
+          "low": "48.715"
+        },
+        {
+          "date": "12/28/2022",
+          "close": "8.08",
+          "volume": "364,869,200",
+          "open": "8.375",
+          "high": "8.5977",
+          "low": "8.05"
+        },
+        {
+          "date": "09/01/2021",
+          "close": "37.5775",
+          "volume": "95,567,920",
+          "open": "37.7075",
+          "high": "38.205",
+          "low": "37.5175"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "fixture_note": "Actual live historical rows: first two and final six; includes duplicate tail.",
+  "fear_and_greed_historical": {
+    "timestamp": 1789430400000.0,
+    "data": [
+      {
+        "x": 1630454400000.0,
+        "y": 43.13333333333333,
+        "rating": "fear"
+      },
+      {
+        "x": 1630540800000.0,
+        "y": 44.166666666666664,
+        "rating": "fear"
+      },
+      {
+        "x": 1788912000000.0,
+        "y": 38.2,
+        "rating": "fear"
+      },
+      {
+        "x": 1788998400000.0,
+        "y": 32.2,
+        "rating": "fear"
+      },
+      {
+        "x": 1789084800000.0,
+        "y": 32.6857142857143,
+        "rating": "fear"
+      },
+      {
+        "x": 1789344000000.0,
+        "y": 30.9428571428571,
+        "rating": "fear"
+      },
+      {
+        "x": 1789430400000.0,
+        "y": 30.9428571428571,
+        "rating": "fear"
+      },
+      {
+        "x": 1789430400000.0,
+        "y": 30.9428571428571,
+        "rating": "fear"
+      }
+    ]
+  }
+}

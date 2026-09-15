@@ -1,0 +1,19 @@
+{
+  "retrieved_on": "2026-09-15",
+  "nasdaq_url": "https://api.nasdaq.com/api/quote/TQQQ/historical?assetclass=etf&fromdate=2020-01-01&todate=2026-09-15&limit=5000",
+  "nasdaq_rows": 1683,
+  "price_basis": "Nasdaq closes empirically match split-adjusted historical reference; not dividend-adjusted total returns",
+  "existing_csv_price_comparisons": 1262,
+  "price_mismatches": 0,
+  "split_source": "https://www.proshares.com/press-releases/proshares-announces-etf-share-splits5",
+  "verified_split": "2025-11-20 2:1; Nasdaq pre-split 2025-11-19 close is already 50.025, do not halve it again",
+  "cnn_history_url": "https://production.dataviz.cnn.io/index/fearandgreed/graphdata/2021-09-01",
+  "cnn_timestamp_semantics": "x is a UTC calendar date label (milliseconds). Keep its UTC date, exclude unfinished sessions; do not shift into the previous New York date. Publication time is unknown.",
+  "cnn_reference_comparisons": 1262,
+  "cnn_revised_rows_since_csv": 1,
+  "duplicate_tail": "Two identical 2026-09-15 date labels observed; deduplicate and exclude before that session completes.",
+  "raw_sha256": {
+    "nasdaq": "9f8f250c3e8fc132dfc62eea4e319db19cd1e353fe21c9ad947e153400beaff3",
+    "cnn": "3b66ee9f3d76518583370bad6369d6f8094cb57884fb7c50b86b580da0a9e970"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "source_url": "https://edition.cnn.com/markets/fear-and-greed",
+  "retrieved_on": "2026-09-15",
+  "page_sha256": "d5c835d7ddef2ab00e69ff77ce0b49390d3ccc89d24edd7b46e56d05ee3a3e2a",
+  "observations": {
+    "gauge_input": "Math.round(score) before fearAndGreedValueToText",
+    "category_rules": "rounded score <=25; >25 and <45; >=45 and <=55; >55 and <75; >=75",
+    "timestamp": "gauge reads summary.timestamp as ISO and displays America/New_York",
+    "summary_path": "CNNB_FNG.fear_and_greed",
+    "data_url": "https://production.dataviz.cnn.io/index/fearandgreed/graphdata",
+    "live_json_access": "Initial urllib/curl probes: HTTP 418. Installed CLI and subsequent Python provider request: HTTP 200 with validated current summary.",
+    "publication_timing": "No guaranteed publication SLA verified",
+    "api_vs_gauge": "Live historical API ratings match unrounded category predicates. The gauge rounds first, so fractional boundary labels may differ. Prefer API/raw categories for alerts."
+  },
+  "live_response": {
+    "retrieved_at": "2026-09-15T04:26:02.810848+00:00",
+    "user_agent": "FearGreedDaily/0.1",
+    "summary_fixture": "cnn_summary.live.json",
+    "normalized_observation": {
+      "score": 30.9428571428571,
+      "category": "fear",
+      "original_category": "fear",
+      "observed_at": "2026-09-15T00:00:00.000000Z",
+      "market_date": "2026-09-14",
+      "market_date_source": "observation_america_new_york",
+      "classification_source": "cnn"
+    },
+    "top_level_keys": [
+      "fear_and_greed",
+      "fear_and_greed_historical",
+      "market_momentum_sp500",
+      "market_momentum_sp125",
+      "stock_price_strength",
+      "stock_price_breadth",
+      "put_call_options",
+      "market_volatility_vix",
+      "market_volatility_vix_50",
+      "junk_bond_demand",
+      "safe_haven_demand"
+    ],
+    "decoded_payload_sha256": "907b9c4e2b35775ced093a14662264c936fb9d240550a8c7257066c1d7caa163",
+    "note": "Fixture preserves the actual fear_and_greed summary only; unrelated component/historical arrays omitted."
+  }
+}

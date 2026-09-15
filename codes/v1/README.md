@@ -43,6 +43,218 @@ Configure `--timeout` and `--attempts` if necessary. Transient network errors an
 HTTP 408/429/500/502/503/504 receive bounded exponential backoff. Access rejections
 such as HTTP 403/418 and malformed payloads are not retried.
 
+## CLI combinations and sample results
+
+The commands below run from the repository root using its virtual environment.
+After installing the package into another environment, replace
+`codes/v1/.venv/bin/fear-greed` with `fear-greed` (and likewise for
+`fear-greed-research`). Use `--help` on either executable to list its options.
+
+### Choose a report format and chart mode
+
+| Options added to `fear-greed` | Result |
+|---|---|
+| No options | CNN report as JSON; no chart generation |
+| `--format text` | Human-readable CNN report |
+| `--charts daily` | JSON report and six-month overlay PNG |
+| `--charts weekly` | JSON report and five-year overlay PNG, on any day |
+| `--charts both` | JSON report and both PNGs |
+| `--charts auto` | JSON report and daily PNG; also weekly on Saturday in Hong Kong |
+| `--charts both --format text` | Human-readable report with both PNG paths |
+
+Chart generation always includes the CNN report. Both images include the
+performance/win-rate panel. `--format` changes stdout formatting, not the images.
+The CLI saves PNGs; it does not open an image viewer or send them anywhere.
+
+### 1. CNN report only: JSON or text
+
+```sh
+codes/v1/.venv/bin/fear-greed --database .runtime/daily.sqlite3
+codes/v1/.venv/bin/fear-greed --database .runtime/daily.sqlite3 --format text
+```
+
+Sample JSON excerpt (pretty-printed here; the CLI emits one line). Samples in this
+section are illustrative unless explicitly identified as recorded results. Values,
+timestamps, events, and cache status depend on the source response and database:
+
+```json
+{
+  "schema_version": "1",
+  "report_date": "2026-09-15",
+  "observation": {
+    "score": 30.3428571428571,
+    "category": "fear",
+    "observed_at": "2026-09-15T08:14:46.000000Z",
+    "market_date": "2026-09-15"
+  },
+  "change_points": 0.0,
+  "freshness": "current",
+  "fetch_status": "success",
+  "is_cached": false,
+  "is_new_observation": true,
+  "entry_event": null,
+  "quality_issues": []
+}
+```
+
+Corresponding sample text:
+
+```text
+CNN Fear & Greed — 2026-09-15 (Hong Kong)
+30.3/100 — Fear
+Observation: 2026-09-15 16:14:46 HKT; market date: 2026-09-15
+Change since previous observation: +0.0 points
+Freshness: current; fetch: success
+Last successful retrieval: 2026-09-15T08:33:14.627902Z
+https://edition.cnn.com/markets/fear-and-greed
+```
+
+Without `--charts`, the report has no `artifacts` or `chart_issues` fields. A repeat
+run can add `No new accepted observation on this run.` to the text output.
+
+### 2. Daily, weekly, or both charts with explicit paths
+
+```sh
+codes/v1/.venv/bin/fear-greed --database .runtime/daily.sqlite3 --charts daily
+codes/v1/.venv/bin/fear-greed --database .runtime/daily.sqlite3 --charts weekly
+codes/v1/.venv/bin/fear-greed \
+  --database .runtime/daily.sqlite3 \
+  --charts both --format text \
+  --output-dir .runtime/charts
+```
+
+For `both`, the text report appends lines like these (assuming a checkout at
+`/srv/tqqq_vs_fear_greed_fetch`):
+
+```text
+Chart: /srv/tqqq_vs_fear_greed_fetch/.runtime/charts/tqqq-fg-daily-2026-09-15.png
+Chart: /srv/tqqq_vs_fear_greed_fetch/.runtime/charts/tqqq-fg-weekly-2026-09-15.png
+cnn: 1 missing interior market sessions
+```
+
+The final line appears only when that history gap is reported. The equivalent JSON
+excerpt below reflects the recorded 2026-09-15 run, with paths shortened to an
+example deployment directory and other artifact fields omitted:
+
+```json
+{
+  "artifacts": [
+    {"kind": "daily", "path": "/srv/tqqq_vs_fear_greed_fetch/.runtime/charts/tqqq-fg-daily-2026-09-15.png", "mime_type": "image/png"},
+    {"kind": "weekly", "path": "/srv/tqqq_vs_fear_greed_fetch/.runtime/charts/tqqq-fg-weekly-2026-09-15.png", "mime_type": "image/png"}
+  ],
+  "chart_issues": [
+    {"code": "history_gaps", "source": "cnn", "message": "cnn: 1 missing interior market sessions"}
+  ]
+}
+```
+
+That run returned exit code **1**, although both images were generated. Each full
+artifact also includes dates, source metadata, `forward_performance`, `data_hash`,
+and `no_new_data`. The output directory contains:
+
+```text
+.runtime/charts/
+  tqqq-fg-daily-2026-09-15.png
+  tqqq-fg-weekly-2026-09-15.png
+  latest-daily.json
+  latest-weekly.json
+```
+
+Filenames use the Hong Kong report date. Reruns replace that day's image and its
+latest manifest. Old images can remain after a failed run: use the current report's
+`artifacts` to identify what that invocation successfully produced.
+
+### 3. Scheduled selection, retries, and saved output
+
+```sh
+mkdir -p .runtime
+codes/v1/.venv/bin/fear-greed \
+  --database .runtime/daily.sqlite3 \
+  --charts auto --format json \
+  --output-dir .runtime/charts \
+  --timeout 30 --attempts 2 \
+  > .runtime/latest-report.json 2> .runtime/fear-greed.log
+```
+
+This runs immediately. `auto` selects daily on Tuesday 2026-09-15 and both on
+Saturday 2026-09-19, based on Hong Kong time. Configure the external scheduler
+separately, using absolute executable, database, output, and log paths.
+
+`--timeout` is a per-request socket timeout in seconds (`0 < timeout <= 120`), not
+a whole-job deadline. `--attempts` accepts 1–5 and applies to each source request.
+`--attempts 1` disables retries. `--output-dir` only affects chart files; shell
+redirection saves stdout and stderr independently. The shell's exit status remains
+the CLI's exit code after redirection. The saved JSON is overwritten on each run.
+
+### 4. Recover persisted entry events without fetching
+
+```sh
+codes/v1/.venv/bin/fear-greed --database .runtime/daily.sqlite3 --events-after 0
+codes/v1/.venv/bin/fear-greed --database .runtime/daily.sqlite3 --events-after 42
+```
+
+`0` replays all persisted events; `42` returns only sequences greater than 42. Use
+the same database as the report job. If no later events exist, stdout is:
+
+```json
+{"schema_version": "1", "events": []}
+```
+
+A successful replay exits **0** and always returns JSON, even with `--format text`.
+`--events-after` cannot be combined with `--charts`; that combination exits **2**
+with an argparse error on stderr. Advance the consuming app's event cursor only
+after successful delivery. See the event recovery section below.
+
+### 5. Generate the separate historical research report
+
+```sh
+codes/v1/.venv/bin/fear-greed-research \
+  --database .runtime/daily.sqlite3 \
+  --output-dir .runtime/research \
+  --split-date 2025-01-01
+```
+
+This studies Extreme Fear exits above/below SMA200; it is a separate analysis from
+the chart's five-category performance panel. It generates a study JSON file and
+return/drawdown distribution PNGs. Sample stdout excerpt:
+
+```json
+{
+  "study_path": "/srv/tqqq_vs_fear_greed_fetch/.runtime/research/extreme-fear-exits-2026-09-15.json",
+  "artifacts": [
+    {"kind": "price_return", "path": "/srv/tqqq_vs_fear_greed_fetch/.runtime/research/extreme-fear-exits-2026-09-15-price_return.png"},
+    {"kind": "max_drawdown", "path": "/srv/tqqq_vs_fear_greed_fetch/.runtime/research/extreme-fear-exits-2026-09-15-max_drawdown.png"}
+  ],
+  "quality_issues": []
+}
+```
+
+Research filenames use the UTC run date. The split date must separate usable
+earlier and later observations. This executable accepts `--database`,
+`--output-dir`, and `--split-date`; it does not accept the report CLI's `--charts`,
+`--format`, `--timeout`, `--attempts`, or `--events-after`. Exit codes are **0** for
+success without issues, **1** for generated results with quality issues, and **2**
+for failure. See [CHARTS.md](CHARTS.md#historical-outcomes-command) for methodology.
+
+### Interpret failures and partial results
+
+| Situation | Result to inspect |
+|---|---|
+| Fresh report with no issues | Exit 0; current observation |
+| Source fetch fails, cached snapshot available | Exit 1; `fetch_status: "failure"`, `is_cached: true`, retained observation and issue messages |
+| No usable observation | Exit 1; `observation: null`; text says `Index unavailable.` |
+| Required chart history unavailable and no usable fallback | Exit 1; `artifacts: []` and `chart_issues` explaining the failure |
+| One chart fails to render | Exit 1; successful artifacts remain, with a `chart_render_failed` issue for the failed kind |
+| Invalid configuration or report storage failure | Exit 2; JSON error object |
+| Invalid flag or incompatible arguments | Exit 2; usage/error text on stderr |
+
+For example, `fear-greed --attempts 0` produces this configuration error, without
+fetching data:
+
+```json
+{"schema_version": "1", "error": {"code": "preparation_failed", "message": "attempts must be between 1 and 5"}}
+```
+
 ## Use from another Python app
 
 ### Install from GitHub
